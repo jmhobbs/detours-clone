@@ -1,0 +1,50 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import asyncore, asynchat
+import os, socket, string
+
+PORT = 8552
+
+class DetourChannel ( asynchat.async_chat ):
+
+	def __init__( self, server, sock, addr ):
+		asynchat.async_chat.__init__(self, sock)
+		self.set_terminator( "\n" )
+		self.request = None
+		self.data = ""
+		self.shutdown = 0
+
+	def collect_incoming_data( self, data ):
+		self.data = self.data + data
+
+	def found_terminator( self ):
+		if not self.request:
+			# Select what needs to be done..
+			if self.data == 'ping':
+				self.push( 'pong' )
+			else:
+				self.push( 'invalid' )
+
+			self.close_when_done()
+
+class DetourServer ( asyncore.dispatcher ):
+
+	def __init__( self, port ):
+		asyncore.dispatcher.__init__(self)
+		self.create_socket( socket.AF_INET, socket.SOCK_STREAM )
+		self.bind( ( '127.0.0.1', port ) )
+		self.listen( 5 )
+
+	def handle_accept ( self ):
+		conn, addr = self.accept()
+		DetourChannel( self, conn, addr )
+
+s = DetourServer( PORT )
+print "Serving at port", PORT, "..."
+try:
+	asyncore.loop()
+except KeyboardInterrupt:
+	print "Shutting Down!"
+	asyncore.socket_map.clear()
+
