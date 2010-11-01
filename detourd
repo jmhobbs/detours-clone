@@ -3,48 +3,81 @@
 
 import asyncore, asynchat
 import os, socket, string
+import json
 
-PORT = 8552
+import hostfile
+
+PORT = 8551
 
 class DetourChannel ( asynchat.async_chat ):
 
-	def __init__( self, server, sock, addr ):
+	def __init__( self, server, sock, addr, hf ):
 		asynchat.async_chat.__init__(self, sock)
 		self.set_terminator( "\n" )
 		self.request = None
 		self.data = ""
 		self.shutdown = 0
+		self.hostfile = hf
 
 	def collect_incoming_data( self, data ):
 		self.data = self.data + data
 
 	def found_terminator( self ):
 		if not self.request:
-			# Select what needs to be done..
-			if self.data == 'ping':
-				self.push( 'pong' )
+			# Select what needs to be done.
+			request = json.loads( self.data )
+			response = {}
+			if request['method'] == 'ping':
+				response['response'] = 'pong'
+			elif request['method'] == 'list':
+				response['response'] = 'list'
+				response['pairs'] = self.hostfile.getDetours()
+			elif request['method'] == 'set':
+				pairs = self.hostfile.getDetours()
+				keep = []
+				for pair in pairs:
+					for newpair in request['pairs']:
+						if newpair['host'] != pair['host']:
+							keep.append( pair )
+				keep.extend( request['pairs'] )
+				self.hostfile.writeDetours( keep )
+				response['response'] = 'set'
+				response['pairs'] = request['pairs']
+			elif request['method'] == 'delete':
+				pairs = self.hostfile.getDetours()
+				keep = []
+				for pair in pairs:
+					if pair['host'] not in request['hosts']:
+						keep.append( pair )
+				self.hostfile.writeDetours( keep )
+				response['response'] = 'deleted'
+				response['hosts'] = request['hosts']
 			else:
-				self.push( 'invalid' )
+				response['response'] = 'invalid'
+
+			self.push( json.dumps( response ) )
 
 			self.close_when_done()
 
 class DetourServer ( asyncore.dispatcher ):
 
-	def __init__( self, port ):
+	def __init__( self, port, hf ):
 		asyncore.dispatcher.__init__(self)
 		self.create_socket( socket.AF_INET, socket.SOCK_STREAM )
 		self.bind( ( '127.0.0.1', port ) )
 		self.listen( 5 )
+		self.hostfile = hf
 
 	def handle_accept ( self ):
 		conn, addr = self.accept()
-		DetourChannel( self, conn, addr )
+		DetourChannel( self, conn, addr, self.hostfile )
 
-s = DetourServer( PORT )
+hf = hostfile.HostFile( 'test-hosts' )
+s = DetourServer( PORT, hf )
 print "Serving at port", PORT, "..."
 try:
 	asyncore.loop()
-except KeyboardInterrupt:
+except Exception, e:
 	print "Shutting Down!"
 	asyncore.socket_map.clear()
 

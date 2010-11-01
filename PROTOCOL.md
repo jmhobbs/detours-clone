@@ -35,4 +35,4 @@ List all existing detours.
 ## Request ##
     {request: 'list'}
 ## Response ##
-    {response: 'set', pairs: [ { host: '[host]', ip: '[ip]' } ] }
+    {response: 'list', pairs: [ { host: '[host]', ip: '[ip]' } ] }
