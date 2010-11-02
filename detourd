@@ -5,9 +5,39 @@ import asyncore, asynchat
 import os, socket, string
 import json
 
+from optparse import OptionParser
+import ConfigParser
+
 import hostfile
 
-PORT = 8551
+parser = OptionParser(
+	usage="usage: %prog [options]",
+	version="%prog 0.1"
+)
+
+parser.add_option(
+	"-d", "--daemonize",
+	action="store_true",
+	dest="daemon",
+	default=False,
+	help="daemonize the process"
+)
+
+parser.add_option(
+	"-c", "--config",
+	action="store",
+	dest="config",
+	default="/etc/detours.conf",
+	help="Config File"
+)
+
+(options, args) = parser.parse_args()
+
+if not os.path.isfile( options.config ):
+	parser.error( '%s is not a valid configuration file' % options.config )
+
+config = ConfigParser.SafeConfigParser( { 'port': 8551 } )
+config.read( options.config )
 
 class DetourChannel ( asynchat.async_chat ):
 
@@ -72,9 +102,14 @@ class DetourServer ( asyncore.dispatcher ):
 		conn, addr = self.accept()
 		DetourChannel( self, conn, addr, self.hostfile )
 
-hf = hostfile.HostFile( 'test-hosts' )
-s = DetourServer( PORT, hf )
-print "Serving at port", PORT, "..."
+hf = hostfile.HostFile( config.get( 'Server', 'hostfile' ) )
+if not hf.canWrite():
+	print "Can't access hosts file: %s" % config.get( 'Server', 'hostfile' )
+	exit()
+s = DetourServer( config.getint( 'Server', 'port' ), hf )
+
+# TODO: Daemonize
+print "Serving at port", config.getint( 'Server', 'port' ), "..."
 try:
 	asyncore.loop()
 except Exception, e:

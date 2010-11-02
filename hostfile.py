@@ -8,6 +8,14 @@ class HostFile:
 	def __init__ ( self, path ):
 		self.path = path
 
+	def canWrite ( self ):
+		try:
+			f = open( self.path, 'r+' )
+			f.close()
+			return True
+		except IOError:
+			return False
+
 	def getDetours ( self ):
 		with open( self.path, 'r' ) as handle:
 			detours = []
