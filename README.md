@@ -8,7 +8,7 @@ If you are on a Mac, I'd use the real thing.  If you are on Linux, you might giv
 
 ## How it works
 
-This clone involves a client and a server, since on Linux the hosts file is protected we have to run our daemon with a privileged user.  The client and server communicate via TCP sockets with JSON.
+This app involves a client and a server, since on Linux the hosts file is protected we have to run our daemon with a privileged user.  The client and server communicate via TCP sockets with JSON.
 
 Currently I have two clients.  One is an HTTP server and one is a GTK client.
 
@@ -22,6 +22,18 @@ This means you should only run this on a single user system, and make sure it is
 
 ## Install
 
-Install is shaky at the moment, this is just a proof of concept.  If you want to try it, you can download and mangle the config file to use a fake hosts file (or the real one if you want).   Then fire up detoursd and a client to play with it.
+Download this package, then, as root, run:
 
-Bug reports and fixes welcome!
+    # python setup.py install
+
+That should drop an init script in for you as well as the two clients, detours-gtk and detours-http
+
+Start detoursd like so:
+
+    # /etc/init.d/detoursd start
+
+Then a client, like so:
+
+    $ detours-gtk
+
+This has been tested on a Debian Sid machine, and nowhere else. Bug and install reports are coveted!
