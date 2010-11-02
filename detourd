@@ -5,8 +5,13 @@ import asyncore, asynchat
 import os, socket, string
 import json
 
+import signal
+
 from optparse import OptionParser
 import ConfigParser
+
+import logging
+import logging.handlers
 
 import hostfile
 
@@ -16,18 +21,18 @@ parser = OptionParser(
 )
 
 parser.add_option(
-	"-d", "--daemonize",
-	action="store_true",
-	dest="daemon",
-	default=False,
-	help="daemonize the process"
+	"-f", "--foreground",
+	action="store_false",
+	dest="daemonize",
+	default=True,
+	help="run the process in the foreground, do not daemonize"
 )
 
 parser.add_option(
 	"-c", "--config",
 	action="store",
 	dest="config",
-	default="/etc/detours.conf",
+	default="/etc/detourd.conf",
 	help="Config File"
 )
 
@@ -102,17 +107,55 @@ class DetourServer ( asyncore.dispatcher ):
 		conn, addr = self.accept()
 		DetourChannel( self, conn, addr, self.hostfile )
 
-hf = hostfile.HostFile( config.get( 'Server', 'hostfile' ) )
-if not hf.canWrite():
-	print "Can't access hosts file: %s" % config.get( 'Server', 'hostfile' )
-	exit()
-s = DetourServer( config.getint( 'Server', 'port' ), hf )
+def signal_handler ( signum, frame ):
+	raise KeyboardInterrupt
 
-# TODO: Daemonize
-print "Serving at port", config.getint( 'Server', 'port' ), "..."
-try:
-	asyncore.loop()
-except Exception, e:
-	print "Shutting Down!"
-	asyncore.socket_map.clear()
+def main ():
+	hf = hostfile.HostFile( config.get( 'Server', 'hostfile' ) )
+	if not hf.canWrite():
+		logger.fatal( "Can't access hosts file: %s" % config.get( 'Server', 'hostfile' ) )
+		exit( 1 )
+	s = DetourServer( config.getint( 'Server', 'port' ), hf )
 
+	logger.debug( "Serving on port %s..." % config.get( 'Server', 'port' ) )
+
+	try:
+		asyncore.loop()
+	except:
+		asyncore.socket_map.clear()
+
+signal.signal( signal.SIGTERM, signal_handler )
+signal.signal( signal.SIGQUIT, signal_handler )
+
+if options.daemonize:
+	import daemon
+	with daemon.DaemonContext():
+		# Pid File
+		with open( config.get( 'Server', 'pidfile' ), 'w' ) as fh:
+			fh.write( str( os.getpid() ) )
+		# Set up logging (have to do inside daemon context)
+		logger = logging.getLogger( 'detourd' )
+		logHandler = logging.handlers.RotatingFileHandler( config.get( 'Server', 'logfile' ), maxBytes=10240, backupCount=5 )
+		logger.setLevel( logging.INFO )
+		logFormatter = logging.Formatter( '[%(asctime)s] %(levelname)s - %(message)s' )
+		logHandler.setFormatter( logFormatter )
+		logger.addHandler( logHandler )
+		logger.info( "Started Detourd" )
+		main()
+		logger.info( "Stopped Detourd" )
+		os.remove( config.get( 'Server', 'pidfile' ) )
+else:
+	# Pid File
+	with open( config.get( 'Server', 'pidfile' ), 'w' ) as fh:
+		fh.write( str( os.getpid() ) )
+	# Set up logging
+	logger = logging.getLogger( 'detourd' )
+	logHandler = logging.StreamHandler()
+	logger.setLevel( logging.DEBUG )
+	logFormatter = logging.Formatter( '[%(asctime)s] %(levelname)s - %(message)s' )
+	logHandler.setFormatter( logFormatter )
+	logger.addHandler( logHandler )
+	logger.info( "Started Detourd" )
+	main()
+	logger.info( "Stopped Detourd" )
+	os.remove( config.get( 'Server', 'pidfile' ) )

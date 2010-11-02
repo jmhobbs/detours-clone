@@ -1,3 +1,4 @@
-*.pyc
-detours.conf
 test-hosts
+*.pyc
+*.conf
+*.log
