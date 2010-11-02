@@ -19,7 +19,7 @@
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 DESC="Host file editor daemon"
 NAME=detoursd
-DAEMON=/usr/sbin/$NAME
+DAEMON=/usr/local/bin/$NAME
 DAEMON_ARGS="-c /etc/detoursd.conf"
 PIDFILE=/var/run/$NAME.pid
 SCRIPTNAME=/etc/init.d/$NAME

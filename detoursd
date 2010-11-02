@@ -13,7 +13,7 @@ import ConfigParser
 import logging
 import logging.handlers
 
-import hostfile
+import detours
 
 parser = OptionParser(
 	usage="usage: %prog [options]",
@@ -111,7 +111,7 @@ def signal_handler ( signum, frame ):
 	raise KeyboardInterrupt
 
 def main ():
-	hf = hostfile.HostFile( config.get( 'Server', 'hostfile' ) )
+	hf = detours.HostFile( config.get( 'Server', 'hostfile' ) )
 	if not hf.canWrite():
 		logger.fatal( "Can't access hosts file: %s" % config.get( 'Server', 'hostfile' ) )
 		exit( 1 )

@@ -1,4 +1,4 @@
 test-hosts
 *.pyc
-*.conf
 *.log
+build/
