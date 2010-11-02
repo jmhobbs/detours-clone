@@ -36,6 +36,14 @@ class Detours:
 		buttons.pack_start( button, False, False )
 
 		image = gtk.Image()
+		image.set_from_stock( gtk.STOCK_REMOVE, gtk.ICON_SIZE_SMALL_TOOLBAR )
+		button = gtk.Button()
+		button.set_image( image )
+		button.set_label( "Remove" )
+		button.connect( "clicked", self.gather_remove )
+		buttons.pack_start( button, False, False )
+
+		image = gtk.Image()
 		image.set_from_stock( gtk.STOCK_REFRESH, gtk.ICON_SIZE_SMALL_TOOLBAR )
 		button = gtk.Button()
 		button.set_image( image )
@@ -48,14 +56,14 @@ class Detours:
 		# Build the tree view
 		scrolled_window = gtk.ScrolledWindow()
 		scrolled_window.set_policy( gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC )
-		tree_view = gtk.TreeView( self.detours )
+		self.tree_view = gtk.TreeView( self.detours )
 		cell = gtk.CellRendererText()
 		column = gtk.TreeViewColumn( "Host", cell, text=0 )
-		tree_view.append_column( column )
+		self.tree_view.append_column( column )
 		cell = gtk.CellRendererText()
 		column = gtk.TreeViewColumn( "IP", cell, text=1 )
-		tree_view.append_column( column )
-		scrolled_window.add( tree_view )
+		self.tree_view.append_column( column )
+		scrolled_window.add( self.tree_view )
 		base.pack_start( scrolled_window )
 
 		# Build the status bar
@@ -105,6 +113,11 @@ class Detours:
 		if response == gtk.RESPONSE_ACCEPT:
 			self.do_set( host.get_text(), ip.get_text() )
 
+	def gather_remove ( self, clickignore=None ):
+		tree, node = self.tree_view.get_selection().get_selected()
+		if node:
+			self.do_delete( tree[node][0] )
+
 	def do_request ( self, request ):
 		s = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
 		s.connect( ( 'localhost', PORT ) )
@@ -132,6 +145,15 @@ class Detours:
 			self.set_status( 'Set Detour' )
 		else:
 			self.set_status( 'Could Not Set Detour!' )
+
+	def do_delete ( self, host ):
+		self.set_status( 'Deleting Detour...' )
+		response = self.do_request( { 'method': 'delete', 'hosts': [ host ] } )
+		if 'deleted' == response['response']:
+			self.do_refresh()
+			self.set_status( 'Deleted Detour' )
+		else:
+			self.set_status( 'Could Not Delete Detour!' )
 
 	def set_status ( self, message ):
 		context = self.status.get_context_id( 'welcome' )
