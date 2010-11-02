@@ -1,5 +1,0 @@
-[Server]
-port: 8551
-hostfile: /etc/hosts
-logfile: /var/log/detourd.log
-pidfile: /var/run/detourd.pid

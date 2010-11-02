@@ -32,7 +32,7 @@ parser.add_option(
 	"-c", "--config",
 	action="store",
 	dest="config",
-	default="/etc/detourd.conf",
+	default="/etc/detoursd.conf",
 	help="Config File"
 )
 
