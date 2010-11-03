@@ -120,12 +120,15 @@ class Detours:
 			self.do_delete( tree[node][0] )
 
 	def do_request ( self, request ):
-		s = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
-		s.connect( ( 'localhost', PORT ) )
-		s.send( json.dumps( request ) + "\n" )
-		data = s.recv( 8192 )
-		s.close()
-		return json.loads( data )
+		try:
+			s = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
+			s.connect( ( 'localhost', PORT ) )
+			s.send( json.dumps( request ) + "\n" )
+			data = s.recv( 8192 )
+			s.close()
+			return json.loads( data )
+		except:
+			return { 'response': 'error' }
 
 	def do_refresh ( self, clickignore=None ):
 		self.set_status( 'Loading Detours...' )
