@@ -21,6 +21,7 @@ class DetoursHandler ( SimpleHTTPServer.SimpleHTTPRequestHandler ):
 			th { background-color: #444; color: #EEE; }
 			td, th { padding: 5px; border: 1px solid #777; }
 			table.form th { text-align: right; }
+			.footer { font-size: 10px; margin-top: 30px; }
 		</style>
 	</head>
 	<body>
@@ -28,17 +29,28 @@ class DetoursHandler ( SimpleHTTPServer.SimpleHTTPRequestHandler ):
 """
 
 	footer = """
+	<div class="footer">&copy; 2010 John Hobbs - <a href="http://github.com/jmhobbs/detours-clone">Detours v1.0.1</a></div>
 	</body>
 </html>
 """
 
+	error_text = """
+<h2>Error!</h2>
+
+<p>The daemon did not respond, or responded with an error condition.</p>
+
+"""
+
 	def do_request ( self, request ):
-		s = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
-		s.connect( ( '127.0.0.1', PORT ) )
-		s.send( json.dumps( request ) + "\n" )
-		data = s.recv( 8192 )
-		s.close()
-		return json.loads( data )
+		try:
+			s = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
+			s.connect( ( '127.0.0.1', PORT ) )
+			s.send( json.dumps( request ) + "\n" )
+			data = s.recv( 8192 )
+			s.close()
+			return json.loads( data )
+		except:
+			return  { 'response': 'error' }
 
 	def do_GET ( self ):
 		# Quick & dirty path handling!
@@ -87,16 +99,22 @@ class DetoursHandler ( SimpleHTTPServer.SimpleHTTPRequestHandler ):
 				for pair in response['pairs']:
 					self.wfile.write( "<tr><td>%s</td><td>%s</td><td><a href=\"/delete?host=%s\">Delete</a></tr>\n" % ( pair['host'], pair['ip'],  pair['host'] ) )
 				self.wfile.write( "</table>\n" )
+			else:
+				self.wfile.write( self.error_text )
 		elif path == '/set':
 			response = self.do_request( { 'method': 'set', 'pairs': [ { 'host': args['host'], 'ip': args['ip'] } ] } )
 			if response['response'] == 'set':
 				self.wfile.write( '<h2>Set %s to %s</h2>' % ( args['host'], args['ip'] ) )
 				self.wfile.write( '<p><a href="/">Back</a></p>' )
+			else:
+				self.wfile.write( self.error_text )
 		elif path == '/delete':
 			response = self.do_request( { 'method': 'delete', 'hosts': [ args['host'] ] } )
 			if response['response'] == 'deleted':
 				self.wfile.write( '<h2>Deleted %s</h2>' % args['host'] )
 				self.wfile.write( '<p><a href="/">Back</a></p>' )
+			else:
+				self.wfile.write( self.error_text )
 		else:
 			self.wfile.write( '<h1>404 - Not Found</h1>' )
 			self.send_response( 404 )
@@ -107,4 +125,7 @@ httpd = SocketServer.ForkingTCPServer( ( '127.0.0.1', SERVE_PORT ), DetoursHandl
 
 print "serving at port", SERVE_PORT
 
-httpd.serve_forever()
+try:
+	httpd.serve_forever()
+except KeyboardInterrupt:
+	exit()
