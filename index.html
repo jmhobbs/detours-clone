@@ -80,6 +80,16 @@
 			You can write a client in any language as long as it can talk on TCP sockets and has a
 			JSON implementation.
 		</p>
+		<p>
+			Heck, if you are clever you can talk right to it:
+			<pre style="overflow: auto;">jmhobbs@asuka:~$ telnet 127.0.0.1 8552
+Trying 127.0.0.1...
+Connected to 127.0.0.1.
+Escape character is '^]'.
+{"method":"list"}
+{"pairs": [{"ip": "127.0.0.1", "host": "google.com"}, {"ip": "127.0.0.1", "host": "gmail.com"}], "response": "list"}Connection closed by foreign host.
+jmhobbs@asuka:~$ </pre>
+		</p>
 
  		<h2>Screen Shots</h2>
 		<p style="text-align: center;">
