@@ -13,7 +13,7 @@ import ConfigParser
 
 parser = OptionParser(
 	usage="usage: %prog [options]",
-	version="%prog 0.1"
+	version="%prog 1.0.2"
 )
 
 parser.add_option(
