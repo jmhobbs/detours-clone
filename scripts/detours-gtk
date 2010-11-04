@@ -15,7 +15,7 @@ import ConfigParser
 
 parser = OptionParser(
 	usage="usage: %prog [options]",
-	version="%prog 1.0.2"
+	version="%prog 1.0.3"
 )
 
 parser.add_option(
@@ -146,7 +146,7 @@ class Detours:
 	def do_request ( self, request ):
 		try:
 			s = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
-			s.connect( ( 'localhost', config.get( 'Server', 'port' ) ) )
+			s.connect( ( '127.0.0.1', config.getint( 'Server', 'port' ) ) )
 			s.send( json.dumps( request ) + "\n" )
 			data = s.recv( 8192 )
 			s.close()

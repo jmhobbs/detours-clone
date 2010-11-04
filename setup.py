@@ -2,7 +2,7 @@
 from distutils.core import setup
 setup(
 	name='detours',
-	version='1.0.2',
+	version='1.0.3',
 	description='Easy Hosts File Editor',
 	author='John Hobbs',
 	author_email='john@velvetcache.org',
