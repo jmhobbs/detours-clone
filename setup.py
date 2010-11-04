@@ -9,7 +9,7 @@ setup(
 	url='http://github.com/jmhobbs/detours-clone',
 	py_modules=['detours'],
 	package_dir = { '': 'lib' },
-	scripts=['scripts/detoursd','scripts/detours-gtk','scripts/detours-http', 'script/detours-qt'],
+	scripts=['scripts/detoursd','scripts/detours-gtk','scripts/detours-http', 'scripts/detours-qt'],
 	data_files=[
 		( '/etc/init.d', ['assets/init.d/detoursd'] ),
 		( '/etc', ['assets/detoursd.conf'] )
