@@ -1,61 +1,167 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-	<head>
-		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-		<title>detours-clone @ GitHub</title>
-		<style type="text/css">
-			body {
-				margin-top: 1.0em;
-				background-color: #ffffff;
-				font-family: "Helvetica,Arial,FreeSans";
-				color: #000000;
-			}
-			#container {
-				margin: 0 auto;
-				width: 700px;
-			}
-			h1 { font-size: 3.8em; color: #000000; margin-bottom: 3px; }
-			h1 .small { font-size: 0.4em; color: #444; }
-			h1 a { text-decoration: none }
-			h2 { font-size: 1.5em; color: #000000; }
-			h3 { color: #000000; }
-			h3 .small { font-size: 0.2em; font-weight: normal; }
-			a { color: #000000; }
-			.description { font-size: 1.2em; margin-bottom: 30px; margin-top: 30px; font-style: italic;}
-			.download { float: right; }
-			pre { background: #000; color: #fff; padding: 15px;}
-			hr { border: 0; width: 80%; border-bottom: 1px solid #aaa}
-			.footer { text-align:center; padding-top:30px; font-style: italic; }
-			.repo { padding: 0 10px; border: 1px solid #777; margin: 5px 0; }
-		</style>
-	</head>
-	<body>
-		<a href="http://github.com/jmhobbs"><img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub" /></a>
-		<div id="container">
-			<h1>
-				<a href="http://github.com/jmhobbs/detours-clone">Detours Clone</a>
-			</h1>
-			
-			<h2>Public Repositories</h2>
-			
-					
-			<div class="footer">
-				contact via john@velvetcache.org or on <a href="http://github.com/jmhobbs">GitHub</a>
-			</div>
 
-		</div><!--// #container //-->
-		
-		
-<script type="text/javascript">
-	var _gaq = _gaq || [];
-	_gaq.push(['_setAccount', 'UA-1664885-10']);
-	_gaq.push(['_trackPageview']);
-	(function() {
-		var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-		ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-		var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-	})();
-</script>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+	<title>jmhobbs/detours-clone @ GitHub</title>
+
+	<style type="text/css">
+		body {
+  		margin-top: 1.0em;
+  		background-color: #ffffff;
+		  font-family: "Helvetica Arial FreeSans";
+  		color: #000000;
+    }
+    #container {
+      margin: 0 auto;
+      width: 700px;
+    }
+		h1 { font-size: 3.8em; color: #000000; margin-bottom: 3px; }
+		h1 .small { font-size: 0.4em; }
+		h1 a { text-decoration: none }
+		h2 { font-size: 1.5em; color: #000000; }
+    h3 { text-align: center; color: #000000; }
+    a { color: #000000; }
+    .description { font-size: 1.2em; margin-bottom: 30px; margin-top: 30px; font-style: italic;}
+    .download { float: right; }
+		pre { background: #000; color: #fff; padding: 15px;}
+    hr { border: 0; width: 80%; border-bottom: 1px solid #aaa}
+    .footer { text-align:center; padding-top:30px; font-style: italic; }
+	</style>
+
+</head>
+
+<body>
+	<a href="http://github.com/jmhobbs/detours-clone"><img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub" /></a>
+
+	<div id="container">
+
+		<div class="download">
+			<a href="http://github.com/jmhobbs/detours-clone/zipball/master">
+				<img border="0" width="90" src="http://github.com/images/modules/download/zip.png"></a>
+			<a href="http://github.com/jmhobbs/detours-clone/tarball/master">
+				<img border="0" width="90" src="http://github.com/images/modules/download/tar.png"></a>
+		</div>
+
+		<h1><a href="http://github.com/jmhobbs/detours-clone">Detours Clone</a>
+			<span class="small">by <a href="http://github.com/jmhobbs">jmhobbs</a></span></h1>
+
+		<div class="description">
+			<p>
+				Detours Clone is a super fast way to edit your hosts file.
+			</p>
+		</div>
+
+		<h2>Credit Where Credit Is Due</h2>
+		<p>
+			Detours Clone is a clone of <a href="http://detoursapp.com">Detours App</a> by
+			Jerod Santo - <a href="http://twitter.com/sant0sk1">Jerod Santo</a>.  Except it's not
+			Mac specific because it leverages the hosts file instead of OS API's.
+		</p>
+		<p>
+			If you are on a Mac, I'd use the real thing. If you are on Linux, you might give this a shot.
+		</p>
+
+		<h2>How It Works</h2>
+		<p>
+			Essentially it maintains a chunk of your hosts file (think <tt>/etc/hosts</tt>)
+			in a parseable fashion and gives you access to easily change it from a client app.
+		</p>
+		<p>
+			This app involves a client and a server, since on Linux the hosts file is protected
+			we have to run our daemon with a privileged user. The client and server
+			communicate via TCP sockets with JSON.
+		</p>
+		<p>
+			Currently there are three Python clients. One is an HTTP server, one is GTK, and one is Qt4.
+			You can write a client in any language as long as it can talk on TCP sockets and has a
+			JSON implementation.
+		</p>
+
+ 		<h2>Screen Shots</h2>
+		<p style="text-align: center;">
+			<img src="qt-client.png" alt="The Qt4 Client" /><br/>
+			<b>Qt4 Client</b>
+		</p>
+		<p style="text-align: center;">
+			<img src="gtk-client.png" alt="The GTK+ Client" /><br/>
+			<b>GTK+ Client (In KDE)</b>
+		</p>
+		<p style="text-align: center;">
+			<img src="http-client.png" alt="The HTTP Client" /><br/>
+			<b>HTTP Client (In Chrome)</b>
+		</p>
+
+		<h2>Dependencies</h2>
+		<p>
+			Python is required for the server.  Also, the python-daemon module is required (for now).
+		</p>
+
+		<h2>Install</h2>
+		<p>
+			<pre>$ git clone git://github.com/jmhobbs/detours-clone
+$ cd detours-clone
+$ python setup.py install</pre>
+		</p>
+
+		<h2>License</h2>
+		<p>MIT</p>
+		<p>
+<pre>Copyright (c) 2010 John Hobbs
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.</pre>
+		</p>
+
+		<h2>Authors</h2>
+		<p>John Hobbs (john@velvetcache.org)</p>
+
+		<h2>Download</h2>
+		<p>
+			You can download this project in either
+			<a href="http://github.com/jmhobbs/detours-clone/zipball/master">zip</a> or
+			<a href="http://github.com/jmhobbs/detours-clone/tarball/master">tar</a> formats.
+		</p>
+		<p>You can also clone the project with <a href="http://git-scm.com">Git</a>
+			by running:
+			<pre>$ git clone git://github.com/jmhobbs/detours-clone</pre>
+		</p>
+
+		<div class="footer">
+			get the source code on GitHub : <a href="http://github.com/jmhobbs/detours-clone">jmhobbs/detours-clone</a>
+		</div>
+
+	</div>
+
+
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-1664885-10']);
+		_gaq.push(['_trackPageview']);
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
 
 	</body>
 </html>
