@@ -4,11 +4,51 @@
 import SimpleHTTPServer
 import SocketServer
 
+import os
+
 import socket
 import json
 
-PORT = 8551
-SERVE_PORT = 8080
+from optparse import OptionParser
+import ConfigParser
+
+parser = OptionParser(
+	usage="usage: %prog [options]",
+	version="%prog 0.1"
+)
+
+parser.add_option(
+	"-d", "--daemonize",
+	action="store_true",
+	dest="daemonize",
+	default=False,
+	help="run the process in the background"
+)
+
+parser.add_option(
+	"-c", "--config",
+	action="store",
+	dest="config",
+	default="/etc/detoursd.conf",
+	help="Config File"
+)
+
+parser.add_option(
+	"-p", "--port",
+	action="store",
+	dest="port",
+	type="int",
+	default=8080,
+	help="Port to serve on"
+)
+
+(options, args) = parser.parse_args()
+
+if not os.path.isfile( options.config ):
+	parser.error( '%s is not a valid configuration file' % options.config )
+
+config = ConfigParser.SafeConfigParser( { 'port': 8551 } )
+config.read( options.config )
 
 class DetoursHandler ( SimpleHTTPServer.SimpleHTTPRequestHandler ):
 
@@ -44,7 +84,7 @@ class DetoursHandler ( SimpleHTTPServer.SimpleHTTPRequestHandler ):
 	def do_request ( self, request ):
 		try:
 			s = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
-			s.connect( ( '127.0.0.1', PORT ) )
+			s.connect( ( '127.0.0.1', config.get( 'Server', 'port' ) ) )
 			s.send( json.dumps( request ) + "\n" )
 			data = s.recv( 8192 )
 			s.close()
@@ -121,11 +161,24 @@ class DetoursHandler ( SimpleHTTPServer.SimpleHTTPRequestHandler ):
 			return
 		self.wfile.write( self.footer )
 
-httpd = SocketServer.ForkingTCPServer( ( '127.0.0.1', SERVE_PORT ), DetoursHandler )
-
-print "serving at port", SERVE_PORT
-
-try:
-	httpd.serve_forever()
-except KeyboardInterrupt:
-	exit()
+if options.daemonize:
+	import daemon
+	import syslog
+	import traceback
+	with daemon.DaemonContext():
+		try:
+			httpd = SocketServer.ForkingTCPServer( ( '127.0.0.1', options.port ), DetoursHandler )
+			httpd.serve_forever()
+		except Exception, e:
+			syslog.syslog( traceback.format_exc()  )
+			exit()
+else:
+	print "serving at port", options.port
+	try:
+		httpd = SocketServer.ForkingTCPServer( ( '127.0.0.1', options.port ), DetoursHandler )
+		httpd.serve_forever()
+	except KeyboardInterrupt:
+		exit()
+	except Exception, e:
+		print str( e )
+		exit()
