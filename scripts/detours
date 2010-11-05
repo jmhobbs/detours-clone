@@ -1,0 +1,77 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+import os
+
+import socket
+import json
+
+from optparse import OptionParser
+import ConfigParser
+
+parser = OptionParser(
+	usage="""usage: %prog [options] action <arguments>
+
+Actions:
+  list              list active detours
+  set <host> <ip>   set a detour for <host> to <ip>
+  unset <host>      unset any detours for <host>""",
+	version="%prog 1.0.4"
+)
+
+parser.add_option(
+	"-c", "--config",
+	action="store",
+	dest="config",
+	default="/etc/detoursd.conf",
+	help="Config File"
+)
+
+(options, args) = parser.parse_args()
+
+if not os.path.isfile( options.config ):
+	parser.error( '%s is not a valid configuration file' % options.config )
+
+config = ConfigParser.SafeConfigParser( { 'port': 8551 } )
+config.read( options.config )
+
+def do_request ( request ):
+	try:
+		s = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
+		s.connect( ( '127.0.0.1', config.getint( 'Server', 'port' ) ) )
+		s.send( json.dumps( request ) + "\n" )
+		data = s.recv( 8192 )
+		s.close()
+		return json.loads( data )
+	except Exception, e:
+		return  { 'response': 'error' }
+
+if 0 == len( args ):
+	parser.error( 'No action provided.' )
+
+if "list" == args[0].lower():
+	response = do_request( { 'method': 'list' } )
+	if 'list' == response['response']:
+		print "Active Detours:"
+		for pair in response['pairs']:
+			print "  %20s    %s" % ( pair['ip'], pair['host'] )
+	else:
+		print "Error getting detours."
+elif "set" == args[0].lower():
+	if 3 > len( args ):
+		parser.error( 'Set requires a host and ip' )
+	response = do_request( { 'method': 'set', 'pairs': [ { 'host': args[1], 'ip': args[2] } ] } )
+	if 'set' == response['response']:
+		print "Set detour: %s => %s" % ( args[1], args[2] )
+	else:
+		print "Error setting detour."
+elif "unset" == args[0].lower():
+	if 2 > len( args ):
+		parser.error( 'Unset requires a host' )
+	response = do_request( { 'method': 'delete', 'hosts': [ args[1] ] } )
+	if 'deleted' == response['response']:
+		print 'Unset detours for host: %s' % args[1]
+	else:
+		print 'Error unsetting detours.'
+else:
+	parser.error( "Invalid action: %s" % args[0] )
+
