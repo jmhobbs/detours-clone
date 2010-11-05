@@ -1,0 +1,4 @@
+test-hosts
+*.pyc
+*.log
+build/

@@ -1,0 +1,154 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+import sys, os
+
+import socket
+import json
+
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
+
+from optparse import OptionParser
+import ConfigParser
+
+parser = OptionParser(
+	usage="usage: %prog [options]",
+	version="%prog 1.0.3"
+)
+
+parser.add_option(
+	"-c", "--config",
+	action="store",
+	dest="config",
+	default="/etc/detoursd.conf",
+	help="Config File"
+)
+
+(options, args) = parser.parse_args()
+
+if not os.path.isfile( options.config ):
+	parser.error( '%s is not a valid configuration file' % options.config )
+
+config = ConfigParser.SafeConfigParser( { 'port': 8551 } )
+config.read( options.config )
+
+def main():
+	app = QApplication( sys.argv )
+	w = Detours()
+	w.show()
+	sys.exit( app.exec_() )
+
+class Detours( QWidget ):
+
+	def __init__( self, *args ):
+		QWidget.__init__( self, *args )
+
+		self.resize( 500, 250 )
+		self.setWindowTitle( 'Detours' )
+
+		buttons = QHBoxLayout()
+		add = QPushButton( QIcon.fromTheme( "list-add" ), 'Add', self )
+		self.connect( add, SIGNAL( 'clicked()' ), self.add_detour )
+		buttons.addWidget( add )
+		remove = QPushButton( QIcon.fromTheme( "edit-delete" ),'Remove', self )
+		self.connect( remove, SIGNAL( 'clicked()' ), self.remove_detour )
+		buttons.addWidget( remove )
+		refresh = QPushButton( QIcon.fromTheme( "view-refresh" ), 'Refresh', self )
+		self.connect( refresh, SIGNAL( 'clicked()' ), self.do_refresh )
+		buttons.addWidget( refresh )
+		buttons.addStretch( 1 )
+
+		self.detours = QTreeWidget()
+		self.detours.setColumnCount( 2 )
+		self.detours.setHeaderLabels( [ 'Host', 'IP' ] )
+
+		layout = QVBoxLayout( self )
+		layout.addLayout( buttons )
+		layout.addWidget( self.detours )
+
+		self.status_bar = QStatusBar()
+		layout.addWidget( self.status_bar )
+
+		self.setLayout( layout )
+		self.show()
+		self.do_refresh()
+
+	def set_status ( self, message ):
+		self.status_bar.clearMessage()
+		self.status_bar.showMessage( message )
+
+	def add_detour ( self ):
+		dialog = QDialog()
+
+		layout = QVBoxLayout()
+		layout.addWidget( QLabel( 'Host:' ) )
+		host = QLineEdit()
+		layout.addWidget( host )
+		layout.addWidget( QLabel( 'IP:' ) )
+		ip = QLineEdit( '127.0.0.1' )
+		layout.addWidget( ip )
+
+		buttonbox = QDialogButtonBox()
+		buttonbox.addButton( 'Add', QDialogButtonBox.AcceptRole )
+		buttonbox.addButton( 'Cancel', QDialogButtonBox.RejectRole )
+		self.connect( buttonbox, SIGNAL( 'accepted()' ), dialog, SLOT( 'accept()' ) );
+		self.connect( buttonbox, SIGNAL( 'rejected()' ), dialog, SLOT( 'reject()' ) );
+		layout.addWidget( buttonbox )
+
+		#add = QPushButton( 'Add' )
+		#buttonbox.addWidget( add )
+
+
+		dialog.setLayout( layout )
+		if QDialog.Accepted == dialog.exec_():
+			self.do_set( str( host.displayText() ), str( ip.displayText() ) )
+
+	def remove_detour ( self ):
+		item = self.detours.currentItem()
+		if item:
+			self.do_delete( str( item.text( 0 ) ) )
+		else:
+			self.set_status( 'No detour selected.' )
+
+	def do_request ( self, request ):
+		try:
+			s = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
+			s.connect( ( '127.0.0.1', config.getint( 'Server', 'port' ) ) )
+			s.send( json.dumps( request ) + "\n" )
+			data = s.recv( 8192 )
+			s.close()
+			return json.loads( data )
+		except Exception, e:
+			return { 'response': 'error' }
+
+	def do_refresh ( self ):
+		self.set_status( 'Loading Detours...' )
+		response = self.do_request( { 'method': 'list' } )
+		if 'list' == response['response']:
+			self.detours.clear()
+			for pair in response['pairs']:
+				self.detours.addTopLevelItem( QTreeWidgetItem( [ pair['host'], pair['ip'] ] ) )
+			self.set_status( 'Loaded Detours' )
+		else:
+			self.set_status( 'Could Not Load Detours!' )
+
+	def do_set ( self, host, ip ):
+		self.set_status( 'Setting Detour...' )
+		response = self.do_request( { 'method': 'set', 'pairs': [ { 'host': host, 'ip': ip } ] } )
+		if 'set' == response['response']:
+			self.do_refresh()
+			self.set_status( 'Set Detour' )
+		else:
+			self.set_status( 'Could Not Set Detour!' )
+
+	def do_delete ( self, host ):
+		self.set_status( 'Deleting Detour...' )
+		response = self.do_request( { 'method': 'delete', 'hosts': [ host ] } )
+		if 'deleted' == response['response']:
+			self.do_refresh()
+			self.set_status( 'Deleted Detour' )
+		else:
+			self.set_status( 'Could Not Delete Detour!' )
+
+if __name__ == "__main__":
+		main()

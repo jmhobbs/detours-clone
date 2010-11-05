@@ -1,0 +1,161 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import asyncore, asynchat
+import os, socket, string
+import json
+
+import signal
+
+from optparse import OptionParser
+import ConfigParser
+
+import logging
+import logging.handlers
+
+import detours
+
+parser = OptionParser(
+	usage="usage: %prog [options]",
+	version="%prog 1.0.3"
+)
+
+parser.add_option(
+	"-f", "--foreground",
+	action="store_false",
+	dest="daemonize",
+	default=True,
+	help="run the process in the foreground, do not daemonize"
+)
+
+parser.add_option(
+	"-c", "--config",
+	action="store",
+	dest="config",
+	default="/etc/detoursd.conf",
+	help="Config File"
+)
+
+(options, args) = parser.parse_args()
+
+if not os.path.isfile( options.config ):
+	parser.error( '%s is not a valid configuration file' % options.config )
+
+config = ConfigParser.SafeConfigParser( { 'port': 8551 } )
+config.read( options.config )
+
+class DetourChannel ( asynchat.async_chat ):
+
+	def __init__( self, server, sock, addr, hf ):
+		asynchat.async_chat.__init__(self, sock)
+		self.set_terminator( "\n" )
+		self.request = None
+		self.data = ""
+		self.shutdown = 0
+		self.hostfile = hf
+
+	def collect_incoming_data( self, data ):
+		self.data = self.data + data
+
+	def found_terminator( self ):
+		if not self.request:
+			# Select what needs to be done.
+			request = json.loads( self.data )
+			response = {}
+			if request['method'] == 'ping':
+				response['response'] = 'pong'
+			elif request['method'] == 'list':
+				response['response'] = 'list'
+				response['pairs'] = self.hostfile.getDetours()
+			elif request['method'] == 'set':
+				pairs = self.hostfile.getDetours()
+				keep = []
+				for pair in pairs:
+					for newpair in request['pairs']:
+						if newpair['host'] != pair['host']:
+							keep.append( pair )
+				keep.extend( request['pairs'] )
+				self.hostfile.writeDetours( keep )
+				response['response'] = 'set'
+				response['pairs'] = request['pairs']
+			elif request['method'] == 'delete':
+				pairs = self.hostfile.getDetours()
+				keep = []
+				for pair in pairs:
+					if pair['host'] not in request['hosts']:
+						keep.append( pair )
+				self.hostfile.writeDetours( keep )
+				response['response'] = 'deleted'
+				response['hosts'] = request['hosts']
+			else:
+				response['response'] = 'invalid'
+
+			self.push( json.dumps( response ) )
+
+			self.close_when_done()
+
+class DetourServer ( asyncore.dispatcher ):
+
+	def __init__( self, port, hf ):
+		asyncore.dispatcher.__init__(self)
+		self.create_socket( socket.AF_INET, socket.SOCK_STREAM )
+		self.bind( ( '127.0.0.1', port ) )
+		self.listen( 5 )
+		self.hostfile = hf
+
+	def handle_accept ( self ):
+		conn, addr = self.accept()
+		DetourChannel( self, conn, addr, self.hostfile )
+
+def signal_handler ( signum, frame ):
+	raise KeyboardInterrupt
+
+def main ():
+	hf = detours.HostFile( config.get( 'Server', 'hostfile' ) )
+	if not hf.canWrite():
+		logger.fatal( "Can't access hosts file: %s" % config.get( 'Server', 'hostfile' ) )
+		exit( 1 )
+	s = DetourServer( config.getint( 'Server', 'port' ), hf )
+
+	logger.debug( "Serving on port %s..." % config.get( 'Server', 'port' ) )
+
+	try:
+		asyncore.loop()
+	except:
+		asyncore.socket_map.clear()
+
+signal.signal( signal.SIGTERM, signal_handler )
+signal.signal( signal.SIGQUIT, signal_handler )
+
+if options.daemonize:
+	import daemon
+	with daemon.DaemonContext():
+		# Pid File
+		with open( config.get( 'Server', 'pidfile' ), 'w' ) as fh:
+			fh.write( str( os.getpid() ) )
+		# Set up logging (have to do inside daemon context)
+		logger = logging.getLogger( 'detourd' )
+		logHandler = logging.handlers.RotatingFileHandler( config.get( 'Server', 'logfile' ), maxBytes=10240, backupCount=5 )
+		logger.setLevel( logging.INFO )
+		logFormatter = logging.Formatter( '[%(asctime)s] %(levelname)s - %(message)s' )
+		logHandler.setFormatter( logFormatter )
+		logger.addHandler( logHandler )
+		logger.info( "Started Detourd" )
+		main()
+		logger.info( "Stopped Detourd" )
+		os.remove( config.get( 'Server', 'pidfile' ) )
+else:
+	# Pid File
+	with open( config.get( 'Server', 'pidfile' ), 'w' ) as fh:
+		fh.write( str( os.getpid() ) )
+	# Set up logging
+	logger = logging.getLogger( 'detourd' )
+	logHandler = logging.StreamHandler()
+	logger.setLevel( logging.DEBUG )
+	logFormatter = logging.Formatter( '[%(asctime)s] %(levelname)s - %(message)s' )
+	logHandler.setFormatter( logFormatter )
+	logger.addHandler( logHandler )
+	logger.info( "Started Detourd" )
+	main()
+	logger.info( "Stopped Detourd" )
+	os.remove( config.get( 'Server', 'pidfile' ) )
