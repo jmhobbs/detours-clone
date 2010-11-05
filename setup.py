@@ -2,14 +2,14 @@
 from distutils.core import setup
 setup(
 	name='detours',
-	version='1.0.3',
+	version='1.0.4',
 	description='Easy Hosts File Editor',
 	author='John Hobbs',
 	author_email='john@velvetcache.org',
 	url='http://github.com/jmhobbs/detours-clone',
 	py_modules=['detours'],
 	package_dir = { '': 'lib' },
-	scripts=['scripts/detoursd','scripts/detours-gtk','scripts/detours-http', 'scripts/detours-qt'],
+	scripts=['scripts/detoursd','scripts/detours-gtk','scripts/detours-http', 'scripts/detours-qt', 'scripts/detours'],
 	data_files=[
 		( '/etc/init.d', ['assets/init.d/detoursd'] ),
 		( '/etc', ['assets/detoursd.conf'] )

@@ -10,7 +10,7 @@ If you are on a Mac, I'd use the real thing.  If you are on Linux, you might giv
 
 This app involves a client and a server, since on Linux the hosts file is protected we have to run our daemon with a privileged user.  The client and server communicate via TCP sockets with JSON.
 
-Currently I have two clients.  One is an HTTP server and one is a GTK client.
+Currently I have four clients: command line, HTTP server, Qt4 and GTK+.
 
 Both allow you to add/remove/update any items in your hosts file __that have been set by this app__.  You can't edit all the entries, only ones created by Detours.
 
@@ -37,3 +37,7 @@ Then a client, like so:
     $ detours-gtk
 
 This has been tested on a Debian Sid machine, and nowhere else. Bug and install reports are coveted!
+
+## Upgrading
+
+Same process as install, though I recommend stopping your detoursd before the upgrade, then starting it again after.
