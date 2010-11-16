@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
 import unittest
+
+# Fix it so we import the dev version before anything else
+lib_path = os.path.abspath( os.path.join( os.path.dirname( os.path.abspath( __file__ ) ), '..', 'lib' ) )
+sys.path.insert( 0, lib_path )
 import hostfile
+del sys.path[0]
 
 import os.path
 
@@ -27,3 +32,6 @@ class TestHostFile ( unittest.TestCase ):
 
 		hf = hostfile.HostFile( DATA_PATH + '/no-detours-section' )
 		self.assertEquals( hf.findDetour( 'google.com' ), None )
+
+if __name__ == '__main__':
+	unitest.main()
