@@ -36,4 +36,15 @@ Then a client, like so:
 
     $ detours-gtk
 
-This has been tested on a Debian Sid machine, and nowhere else. Bug and install reports are coveted!
+This has been tested on a Debian Sid machine, an Ubuntu machine, and nowhere else. Bug and install reports are coveted!
+
+### Always-On Daemon
+
+If you want the daemon to run on boot, you can set up the init script, as root, like so (Ubuntu)
+
+    # update-rc.d detoursd defaults
+
+## Upgrading
+
+Same process as install, though I recommend stopping your detoursd before the upgrade, then starting it again after.
+
