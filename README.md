@@ -20,6 +20,10 @@ In case you missed it, the gaping flaw here is that there is now a TCP server th
 
 This means you should only run this on a single user system, and make sure it is not exposed to the external interface (it binds to 127.0.0.1 but you should verify)
 
+## Requirements
+
+* [python-daemon](http://pypi.python.org/pypi/python-daemon/)
+
 ## Install
 
 Download this package, then, as root, run:
