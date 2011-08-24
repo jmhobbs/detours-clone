@@ -10,7 +10,7 @@ If you are on a Mac, I'd use the real thing.  If you are on Linux, you might giv
 
 This app involves a client and a server, since on Linux the hosts file is protected we have to run our daemon with a privileged user.  The client and server communicate via TCP sockets with JSON.
 
-Currently I have two clients.  One is an HTTP server and one is a GTK client.
+Currently there are three clients.  One is an HTTP server and one GTK+, and one it Qt.
 
 Both allow you to add/remove/update any items in your hosts file __that have been set by this app__.  You can't edit all the entries, only ones created by Detours.
 
@@ -30,7 +30,7 @@ Download this package, then, as root, run:
 
     # python setup.py install
 
-That should drop an init script in for you as well as the two clients, detours-gtk and detours-http
+That should drop an init script in for you as well as the clients.
 
 Start detoursd like so:
 
@@ -51,4 +51,26 @@ If you want the daemon to run on boot, you can set up the init script, as root, 
 ## Upgrading
 
 Same process as install, though I recommend stopping your detoursd before the upgrade, then starting it again after.
+
+## Tests
+
+There are some basic, non-destructive tests for the module.
+
+From the root directory, run:
+
+    $ nosetests
+
+## Protocol
+
+The protocol is simple, and is described in PROTOCOL.md
+
+If you want to mess around with it directly, just use telnet (or equivalent)
+
+    jmhobbs@Cordelia:~$ telnet localhost 8551
+    Trying 127.0.0.1...
+    Connected to localhost.
+    Escape character is '^]'.
+    {"method":"list"} 
+    {"pairs": [{"ip": "127.0.0.1", "host": "kohana"}, {"ip": "127.0.0.1", "host": "launder"}], "response": "list"}Connection closed by foreign host.
+    jmhobbs@Cordelia:~$ 
 
