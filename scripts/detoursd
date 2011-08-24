@@ -13,11 +13,13 @@ import ConfigParser
 import logging
 import logging.handlers
 
+import traceback
+
 import detours
 
 parser = OptionParser(
 	usage="usage: %prog [options]",
-	version="%prog 1.0.3"
+	version="%prog 1.0.4"
 )
 
 parser.add_option(
@@ -58,41 +60,45 @@ class DetourChannel ( asynchat.async_chat ):
 		self.data = self.data + data
 
 	def found_terminator( self ):
-		if not self.request:
-			# Select what needs to be done.
-			request = json.loads( self.data )
-			response = {}
-			if request['method'] == 'ping':
-				response['response'] = 'pong'
-			elif request['method'] == 'list':
-				response['response'] = 'list'
-				response['pairs'] = self.hostfile.getDetours()
-			elif request['method'] == 'set':
-				pairs = self.hostfile.getDetours()
-				keep = []
-				for pair in pairs:
-					for newpair in request['pairs']:
-						if newpair['host'] != pair['host']:
+		try:
+			if not self.request:
+				# Select what needs to be done.
+				request = json.loads( self.data )
+				response = {}
+				if request['method'] == 'ping':
+					response['response'] = 'pong'
+				elif request['method'] == 'list':
+					response['response'] = 'list'
+					response['pairs'] = self.hostfile.getDetours()
+				elif request['method'] == 'set':
+					pairs = self.hostfile.getDetours()
+					keep = []
+					for pair in pairs:
+						for newpair in request['pairs']:
+							if newpair['host'] != pair['host']:
+								keep.append( pair )
+					keep.extend( request['pairs'] )
+					self.hostfile.writeDetours( keep )
+					response['response'] = 'set'
+					response['pairs'] = request['pairs']
+				elif request['method'] == 'delete':
+					pairs = self.hostfile.getDetours()
+					keep = []
+					for pair in pairs:
+						if pair['host'] not in request['hosts']:
 							keep.append( pair )
-				keep.extend( request['pairs'] )
-				self.hostfile.writeDetours( keep )
-				response['response'] = 'set'
-				response['pairs'] = request['pairs']
-			elif request['method'] == 'delete':
-				pairs = self.hostfile.getDetours()
-				keep = []
-				for pair in pairs:
-					if pair['host'] not in request['hosts']:
-						keep.append( pair )
-				self.hostfile.writeDetours( keep )
-				response['response'] = 'deleted'
-				response['hosts'] = request['hosts']
-			else:
-				response['response'] = 'invalid'
+					self.hostfile.writeDetours( keep )
+					response['response'] = 'deleted'
+					response['hosts'] = request['hosts']
+				else:
+					response['response'] = 'invalid'
 
-			self.push( json.dumps( response ) )
+				self.push( json.dumps( response ) )
 
-			self.close_when_done()
+		except Exception, e:
+			logger.error( traceback.format_exc() )
+
+		self.close_when_done()
 
 class DetourServer ( asyncore.dispatcher ):
 
@@ -121,7 +127,9 @@ def main ():
 
 	try:
 		asyncore.loop()
-	except:
+	except Exception, e:
+		logger.log( traceback.format_exc() )
+	finally:
 		asyncore.socket_map.clear()
 
 signal.signal( signal.SIGTERM, signal_handler )
@@ -159,3 +167,4 @@ else:
 	main()
 	logger.info( "Stopped Detourd" )
 	os.remove( config.get( 'Server', 'pidfile' ) )
+

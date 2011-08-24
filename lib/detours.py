@@ -28,7 +28,11 @@ class HostFile:
 						opened = True
 				else:
 					if opened:
-						detours.append( self.parseDetour( line ) )
+						try:
+							detours.append( self.parseDetour( line ) )
+						except IndexError, e:
+							pass
+
 		return detours
 
 	def writeDetours ( self, detours ):
@@ -59,3 +63,4 @@ class HostFile:
 			if detour['host'] == host.lower():
 				return detour
 		return None
+
